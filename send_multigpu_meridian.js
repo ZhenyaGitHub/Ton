@@ -119,7 +119,6 @@ function updateBestGivers2(liteClient) {
     return __awaiter(this, void 0, void 0, function* () {
 		//console.log('updateBestGivers2 Start')
         let complexityNew;
-	
 		for (let i = 0; i < givers.length; i++) {
 			const giver = givers[i];
 			const [seed, complexity, iterations] = yield getPowInfo(liteClient, core_1.Address.parse(giver.address));
@@ -142,7 +141,8 @@ function updateBestGivers2(liteClient) {
 				}
 			}
 
-            // console.log('complexity ', i, ': ', complexity)
+            //console.log('complexity ', i, ': ', complexity)
+            yield delay(200);
 		}
 
         if (!complexityLast) {
@@ -150,12 +150,12 @@ function updateBestGivers2(liteClient) {
         } else if (complexityLast != complexityNew) {
             console.log('Found new job: ', complexityNew)
             complexityLast = complexityNew;
-/*
+
             for (const handle of handlers) {
-                console.log('handle 1: ', handle);
+                //console.log('handle 1: ', handle);
                 handle.kill('SIGINT');
-                console.log('handle 2: ', handle);
-            }*/
+                //console.log('handle 2: ', handle);
+            }
         }
 
 		/* console.log('')
@@ -289,6 +289,12 @@ function main() {
         while (go) {
             const giverAddress = bestGiver.address;
             const [seed, complexity, iterations] = yield getPowInfo(liteClient, core_1.Address.parse(giverAddress));
+            if (complexity < complexityLast) {
+                yield updateBestGivers2(liteClient);
+                yield delay(200);
+                continue;
+            }
+
             if (seed === lastMinedSeed) {
                 // console.log('Wating for a new seed')
                 //updateBestGivers(liteClient, wallet.address);
@@ -298,7 +304,7 @@ function main() {
             }
             console.log('use complexity: ', complexity);
             const promises = [];
-            let handlers = [];
+            handlers = [];
             const mined = yield new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 let rest = gpus;
                 for (let i = 0; i < gpus; i++) {
@@ -385,7 +391,7 @@ function sendMinedBoc(wallet, seqno, keyPair, giverAddress, boc) {
                 secretKey: keyPair.secretKey,
                 messages: [(0, core_1.internal)({
                         to: giverAddress,
-                        value: (0, core_1.toNano)('0.08'),
+                        value: (0, core_1.toNano)('0.083'),
                         bounce: true,
                         body: boc,
                     })],
